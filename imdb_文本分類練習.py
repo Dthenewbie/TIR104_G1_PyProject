@@ -7,21 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1hSgpmKoJT9O7edhYxrIin-hCC5yCnf8_
 """
 
-# Commented out IPython magic to ensure Python compatibility.
-# %pip install transformers
-# %pip install torch
-
-# 技術方法
-# 詞袋模型 (Bag-of-Words)
-# 詞袋模型將文本文件視為詞語的集合，忽略語法和詞序。它通過計算每個詞在文本中的出現頻率，創建一個數值特徵向量。
-# 詞頻-逆文檔頻率 (TF-IDF)
-# TF-IDF通過考慮詞在文檔中的出現頻率以及在整個語料庫中的逆頻率，表示詞在文檔中的重要性。
-# 詞嵌入 (Word Embedding)
-# 詞嵌入技術 (如Word2Vec和GloVe) 將詞表示為高維向量空間中的密集向量，捕捉詞之間的語義關係。
-# 機器學習算法
-# 可以使用支持向量機 (SVM)、朴素貝葉斯、決策樹等監督學習算法進行文本分類，利用提取的特徵。
-# 深度學習模型
-# 深度學習模型，如卷積神經網絡 (CNN)、循環神經網絡 (RNN)和基於Transformer的模型 (如BERT)，在文本分類任務中取得了顯著進展。
 
 import pandas as pd
 import torch
@@ -125,99 +110,19 @@ class MovieData(Dataset):
             "labels": torch.tensor(labels, dtype=torch.long),
         })
 
-# # 定義 collate_fn
-# def collate_fn(batch):
-#     input_ids = [item["input_ids"] for item in batch]
-#     attention_mask = [item["attention_mask"] for item in batch]
-#     labels = [item["labels"] for item in batch]
 
-#     # 動態 padding
-#     padded = tokenizer.pad(
-#         {"input_ids": input_ids, "attention_mask": attention_mask},
-#         padding=True,
-#         return_tensors="pt",
-#     )
-
-#     return {
-#         "input_ids": padded["input_ids"],
-#         "attention_mask": padded["attention_mask"],
-#         "labels": torch.tensor(labels, dtype=torch.long),
-#     }
 
 movie_comment_train = MovieData(train, tokenizer)
 movie_comment_test = MovieData(test, tokenizer)
 len(movie_comment_train)
 
 batch_size = 16
-# dataloader_train = iter(DataLoader(movie_comment_train, batch_size=batch_size, shuffle=True, collate_fn=collate_fn))
 dataloader_train = DataLoader(movie_comment_train, batch_size=batch_size)#, shuffle=True # 注意如果DataLoder 前面加iter 會讓之後訓練跑迴圈第一次跑完 全部就變空的，會有異常
 test_loader = DataLoader(movie_comment_test, batch_size=16)
-# input_ = next(dataloader_train)
-# input_['input_ids'].shape
 
-
-
-# outputs = model(**input_)
-
-# 設置設備
-# model.to(device) 的具體功能包括：
-
-# 遷移模型的參數與頂點：
-# 將模型的重度、偏壓和其他參數從原來的裝置（通常是CPU）移動到目標裝置。
-# 支援硬體加速：
-# 如果將模型移到GPU（cuda），模型的運算將使用GPU資源，顯著加速訓練和推理。
 
 device0 = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device0)
-
-# outputs = model(input_ids, attention_mask=attention_mask, labels=labels)#, labels=labels
-
-# loss = outputs.loss
-
-# 為什麼transformer 可以這樣定義 loss function
-
-# 而不像 一般torch 要定義 loss = nn.BCELoss() losses = loss(pre, act)
-# ChatGPT 說：
-# ChatGPT
-# 在 Transformers 中，输出的 loss 通常是 模型（如 BERT、GPT）内部定义好的，这通常是由于 模型（例如 AutoModelForSequenceClassification）已将损失函数集成到输出中，方便用户直接使用。
-
-# Transformers 模型为什么可以这样定义 loss？
-# 在许多 Transformers 模型（如 AutoModelForSequenceClassification）中，损失函数已经被定义为模型的一部分，因此你不需要像一般 PyTorch 模型那样显式地初始化一个 nn.BCELoss()。模型输出通常会直接包含：
-
-# loss：模型内部计算好的损失。
-# logits：模型的输出结果，即未归一化的预测值。
-# 与一般 PyTorch 模型的区别
-# 在一般 PyTorch 模型中：
-
-# 你需要显式地选择一个 loss 类，比如 nn.BCELoss()，然后将 pre（预测值）和 act（实际值）传入进行计算：
-# python
-# 複製
-# 編輯
-# loss = nn.BCELoss()(pre, act)
-# 在 Transformers 中，由于模型本身集成了损失函数，你只需从模型的输出中提取 loss，模型会自动计算损失。
-# Transformers 模型输出示例
-# python
-# 複製
-# 編輯
-# outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-# loss = outputs.loss  # 直接从模型输出提取的损失
-# logits = outputs.logits  # 模型输出的 logits
-# 通常 BERT 分类任务
-# 在 BERT 分类任务中，输出的 logits 是模型的未归一化预测值。
-# 损失通常是使用 nn.CrossEntropyLoss() 或其他分类损失函数计算：
-# python
-# 複製
-# 編輯
-# loss_fct = nn.CrossEntropyLoss()
-# loss = loss_fct(logits, labels)
-# 总结
-# Transformers 模型（如 BERT）的 loss 已经集成在输出中，因此你不需要像一般 PyTorch 模型那样显式地定义损失函数。
-# 如果需要使用特定的损失函数，可以在后处理 logits 后显式地计算损失。比如：
-# python
-# 複製
-# 編輯
-# loss_fct = nn.CrossEntropyLoss()
-# loss = loss_fct(logits, labels)
 
 epochs = 5
 import os
@@ -228,19 +133,7 @@ from torch.nn.utils import clip_grad_norm_
 
 # 在每个梯度更新步骤后，裁剪梯度
 clip_grad_norm_(model.parameters(), max_norm=1.0)
-# for epoch in range(epochs):
 
-#     for x_batch, y_batch in dataloader:
-#         y_batch_predict = model(x_batch.float())
-#         optim.zero_grad()
-#         loss = lossfcn(y_batch_predict, y_batch)
-
-#         loss.backward() # grads = tape.gradient(loss, model.trainable_variables) tensorflow 不像torch loss是一個物件裡面已經儲存 要更新參數，需要額外提供
-#         optim.step() # optimizer.apply_gradients(zip(grads[4:], model.trainable_variables[4:]) # 當下梯度 前一次梯度 透過迴圈持續更新初始化函數內參數
-
-# dataset[1][1]
-# model(dataset[0][0]) #RuntimeError: mat1 and mat2 shapes cannot be multiplied (20x16 and 320x100)
-# model(dataset[1][0].reshape(-1,3, 28, 28))
 for epoch in range(epochs):
     total_loss = 0
     model.train()
@@ -312,20 +205,3 @@ torch.save(model, save_path)
 # load model
 save_path = '/content/drive/MyDrive/model_all_test_loss0.0485.pth'
 model = torch.load(save_path)
-
-# # for test_text in test["review"][0]:
-# train["review"][155]
-# model.eval()
-# all_preds = []
-# all_labels = []
-# with torch.no_grad():
-#   inputs = tokenizer(train["review"][1000], return_tensors="pt", padding="max_length", max_length=512, truncation=True)
-#   input_ids = inputs["input_ids"].to(device)
-#   attention_mask = inputs["attention_mask"].to(device)
-
-#   outputs = model(input_ids, attention_mask=attention_mask)
-#   print(outputs.logits)
-#   probabilities = torch.nn.functional.softmax(outputs.logits, dim=-1)  # 轉換為機率
-#   prediction = torch.argmax(outputs.logits, dim=-1)  # 得到預測結果
-#   print(prediction)
-#   print(train["sentiment"][1000])
