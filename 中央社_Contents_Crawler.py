@@ -42,12 +42,19 @@ def main():
         return
 
     article_links = parse_article_links(html)
-    news = {}
+    # news = {}
+
+    # for link in article_links:
+    #     article = fetch_article_content(link)
+    #     if article:
+    #         news[article["title"]] = article["date"] + " " + article["content"]
+    
+    news = []
 
     for link in article_links:
         article = fetch_article_content(link)
         if article:
-            news[article["title"]] = article["date"] + " " + article["content"]
+            news.append(article)
 
     with open('中央社詐騙新聞內容.json', 'w', encoding='utf-8') as f:
         json.dump(news, f, ensure_ascii=False, indent=4)

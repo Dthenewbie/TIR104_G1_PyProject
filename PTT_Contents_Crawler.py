@@ -21,7 +21,7 @@ def get_soup(url):
     driver.get(url)
     if "over18" in driver.current_url:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.NAME, "yes"))).click()
-    time.sleep(2)  # 等待頁面加載
+    time.sleep(1)  # 等待頁面加載
     page_source = driver.page_source
     return BeautifulSoup(page_source, "html.parser")
 
@@ -40,7 +40,7 @@ def get_article_content(article_url):
     dateTag = soup.select("span.article-meta-value")
     date = dateTag[-1].text if dateTag else "No Date"
     content = soup.select_one("#main-content").text.split("※ 發信站: 批踢踢實業坊(ptt.cc)")[0].strip()
-    return {"title": title, "author": author, "date": date, "content": content, "url": f"{base_url}{article_url}"}
+    return  {"title": title, "author": author, "date": date, "content": content, "url": f"{base_url}{article_url}"}
 
 # 爬取所有頁面的文章內容
 all_articles = []
@@ -50,9 +50,13 @@ while True:
     soup = get_soup(current_url)
     article_links = get_article_links(soup)
     for link in article_links:
-        article_content = get_article_content(link)
-        all_articles.append(article_content)
-        print(f"已爬取: {article_content['title']}")
+        try:
+            article_content = get_article_content(link)
+            if article_content['title']!="No Title":
+              all_articles.append(article_content)
+              print(f"已爬取: {article_content['title']}")
+        except Exception as e:
+            print(f"Error fetching article {link}: {e}")
     
     # 找到上一頁的連結
     paging = soup.select("div.btn-group.btn-group-paging a")
