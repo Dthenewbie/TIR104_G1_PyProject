@@ -73,15 +73,18 @@ async def scrape_main_page(url):
 
                 # 進入新聞詳細頁，爬取內文（帶重試機制）
                 content = await scrape_news_details_with_retries(browser, detail_url)
+                uuid = uuid.uuid3(uuid.NAMESPACE_DNS, content)
                 
                 if "Failed" in content or "Error" in content:
                     error_log.append({"URL": detail_url, "Error": content})
                 else:
                     all_results.append({
+                        "ID": uuid,
                         "Title": title,
                         "Reported_date": date,
-                        "URL": detail_url,
                         "Content": content,
+                        "Url": detail_url,
+                        "Create_time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
                     print(f"Scraped: {title} ({date})")
 
