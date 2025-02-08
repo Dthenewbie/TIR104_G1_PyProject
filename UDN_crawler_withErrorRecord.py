@@ -2,6 +2,7 @@ import asyncio
 import playwright
 from playwright.async_api import async_playwright
 import json
+import datetime
 
 async def scrape_news_details(browser, detail_url):
     """進入新聞詳細頁，爬取內文內容。"""
