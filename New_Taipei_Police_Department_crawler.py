@@ -5,16 +5,17 @@ from bs4 import BeautifulSoup
 import json
 import time
 from datetime import datetime
+import uuid
 
-create_time = str(datetime.now())
 def getPageContent(soup):
     text = ""
     for article in soup.select("main.main"):
+        ID = uuid.uuid3(uuid.NAMESPACE_DNS, Content)
         Title = article.select_one("h2").text.strip()
         Date = article.select_one("time").text.strip()
         Content = article.select_one("article.cpArticle").text.strip()
-        Created_time = create_time
-        text += f"Title: {Title}\nDate: {Date}\nContent: {Content}\nCreated_time: {Created_time}/n"
+        Created_time = str(datetime.now())
+        text += f"ID: {ID}\nTitle: {Title}\nDate: {Date}\nContent: {Content}\nCreated_time: {Created_time}/n"
 
     return Title, text
 
@@ -35,9 +36,14 @@ def main():
             soup = BeautifulSoup(page_source, "html.parser")
             title, content = getPageContent(soup)
             print(content)
-            result[title] = content
+            
+            # 取得當前文章網址
+            article_url = f"Link: {driver.current_url}" 
+            result[title] = {content, article_url}
+
             driver.back()
             time.sleep(3)
+
     except Exception as e:
         print(e)
 
@@ -52,9 +58,13 @@ def main():
             soup = BeautifulSoup(page_source, "html.parser")
             title, content = getPageContent(soup)
             print(content)
-            result_2[title] = content
+            
+            article_url = f"Link: {driver.current_url}"  
+            result_2[title] = {content, article_url}
+
             driver.back()
             time.sleep(3)
+            
     except Exception as e:
         print(e)
 

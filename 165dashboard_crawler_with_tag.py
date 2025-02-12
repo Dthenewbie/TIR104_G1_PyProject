@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
+import uuid
 import hashlib
 import json
 import time
@@ -23,7 +24,7 @@ def init_driver():
 
 def scrape_content(driver, area):
     data = []
-    seen_hashes = set()  # 用於記錄已處理內容的哈希值
+    seen_uuid = set()  # 用於記錄已處理內容的uuid
     last_card_count = 0  # 用於追蹤區塊數量變化
 
     while True:
@@ -38,17 +39,16 @@ def scrape_content(driver, area):
                 content = card.find_element(By.CSS_SELECTOR, 'div.content').text.replace("\n", "")
                 date = card.find_element(By.CSS_SELECTOR, 'span.summary__date').text
                 
-                # 計算內容的哈希值
-                unique_content = f"{title}{content}{date}"
-                content_hash = hashlib.md5(unique_content.encode('utf-8')).hexdigest()
+                # 計算內容的uuid
+                uuid = uuid.uuid3(uuid.NAMESPACE_DNS, content)
                 
                 # 檢查是否已處理過
-                if content_hash in seen_hashes:
+                if uuid in seen_uuid:
                     continue
                 create_time = str(datetime.now())
                 # 新增到結果清單
                 data.append({
-                    "ID": content_hash, #將哈希值當作辨識ID
+                    "ID": uuid, #將uuid當作辨識ID
                     'title': title,
                     'content': content,
                     'date': date,
@@ -57,7 +57,7 @@ def scrape_content(driver, area):
                 })
                 
                 # 標記為已處理
-                seen_hashes.add(content_hash)
+                seen_uuid.add(uuid)
             except Exception as e:
                 print(f"Error extracting card content: {e}")
         # 更新處理過的區塊數量
